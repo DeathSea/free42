@@ -340,7 +340,7 @@
               <MiscControls>-fshort-enums </MiscControls>
               <Define>USE_HAL_DRIVER,STM32L476xx,DECIMAL_CALL_BY_REFERENCE=1,DECIMAL_GLOBAL_ROUNDING=1,DECIMAL_GLOBAL_ROUNDING_ACCESS_FUNCTIONS=1,DECIMAL_GLOBAL_EXCEPTION_FLAGS=1,DECIMAL_GLOBAL_EXCEPTION_FLAGS_ACCESS_FUNCTIONS=1,_WCHAR_T_DEFINED</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include;..\Core\common</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -423,6 +423,11 @@
               <FileName>stm32_handle.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\stm32_handle.c</FilePath>
+            </File>
+            <File>
+              <FileName>shell_main.c</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Core\Src\shell_main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -649,6 +654,11 @@
               <FileType>8</FileType>
               <FilePath>..\Core\common\core_variables.cc</FilePath>
             </File>
+            <File>
+              <FileName>shell_spool.cc</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Core\common\shell_spool.cc</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -656,7 +666,7 @@
           <Files>
             <File>
               <FileName>gcc111libbid.a</FileName>
-              <FileType>4</FileType>
+              <FileType>3</FileType>
               <FilePath>..\Core\gcc111libbid.a</FilePath>
             </File>
           </Files>
