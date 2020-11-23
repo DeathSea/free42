@@ -36,27 +36,27 @@ BUILD_DIR = build
 ######################################
 # free 42 common sources
 FREE42_C_SOURCES = \
-Core/Common/core_commands1.cc \
-Core/Common/core_commands2.cc \
-Core/Common/core_commands3.cc \
-Core/Common/core_commands4.cc \
-Core/Common/core_commands5.cc \
-Core/Common/core_commands6.cc \
-Core/Common/core_commands7.cc \
-Core/Common/core_display.cc \
-Core/Common/core_globals.cc \
-Core/Common/core_helpers.cc \
-Core/Common/core_keydown.cc \
-Core/Common/core_linalg1.cc \
-Core/Common/core_linalg2.cc \
-Core/Common/core_main.cc \
-Core/Common/core_math1.cc \
-Core/Common/core_math2.cc \
-Core/Common/core_phloat.cc \
-Core/Common/core_sto_rcl.cc \
-Core/Common/core_tables.cc \
-Core/Common/core_variables.cc \
-Core/Common/shell_spool.cc 
+Core/common/core_commands1.cc \
+Core/common/core_commands2.cc \
+Core/common/core_commands3.cc \
+Core/common/core_commands4.cc \
+Core/common/core_commands5.cc \
+Core/common/core_commands6.cc \
+Core/common/core_commands7.cc \
+Core/common/core_display.cc \
+Core/common/core_globals.cc \
+Core/common/core_helpers.cc \
+Core/common/core_keydown.cc \
+Core/common/core_linalg1.cc \
+Core/common/core_linalg2.cc \
+Core/common/core_main.cc \
+Core/common/core_math1.cc \
+Core/common/core_math2.cc \
+Core/common/core_phloat.cc \
+Core/common/core_sto_rcl.cc \
+Core/common/core_tables.cc \
+Core/common/core_variables.cc \
+Core/common/shell_spool.cc \
 
 # devlop code
 DEVLP_C_SOURCES = \
@@ -183,7 +183,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32L476RGTx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys -lgccc111libbid
+LIBS = -lc -lm -lnosys -lgcc111libbid
 LIBDIR = -L./
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
@@ -202,8 +202,6 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
-
-$(info $(OBJECTS))
 
 $(BUILD_DIR)/%.o: %.cc Makefile | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cc=.lst)) $< -o $@
