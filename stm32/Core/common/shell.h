@@ -19,7 +19,9 @@
 #define SHELL_H 1
 
 #include "free42.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* shell_platform()
  *
  * The shell should return a null-terminated string here that identifies the
@@ -220,5 +222,8 @@ void shell_message(const char *message);
  * Note: non-debug versions of Free42 should never use this.
  */
 void shell_log(const char *message);
+#ifdef __cplusplus
+}
+#endif
 
 #endif

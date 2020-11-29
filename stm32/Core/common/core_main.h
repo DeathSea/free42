@@ -36,6 +36,9 @@
  * state file version number; otherwise its value is not used.
  * This is guaranteed to be the first function called on the emulator core.
  */
+#ifdef __cplusplus
+extern "C"
+#endif
 void core_init(int read_state, int4 version, const char *state_file_name, int offset);
 
 /* core_save_state()

@@ -61,7 +61,7 @@ static int4 oldpc;
 
 core_settings_struct core_settings;
 
-void core_init(int read_saved_state, int4 version, const char *state_file_name, int offset) {
+extern "C" void core_init(int read_saved_state, int4 version, const char *state_file_name, int offset) {
 
     /* Possible values for read_saved_state:
      * 0: state file not present (Memory Clear)

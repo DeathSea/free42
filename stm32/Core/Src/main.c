@@ -5,6 +5,8 @@
 #include "screen.h"
 #include "keyboard.h"
 #include "stdio.h"
+#include "core_main.h"
+
 
 SPI_HandleTypeDef hspi2;
 
@@ -23,7 +25,10 @@ int fputc(int c, FILE *stream)
    return(ITM_SendChar(c));
 }
 
-
+void init_calc()
+{
+    core_init(0, 0, NULL, 0);
+}
 /* USER CODE END 0 */
 
 /**
@@ -44,18 +49,20 @@ int main(void)
 
   int last_keynum = 0;
 
+  init_calc();
   /* Infinite loop */
   while (1)
   {
-    int keynum = KeyScan();
-		if (keynum != last_keynum) {
-			if (keynum != 0) {
-   			printf("someone press key:%d \n", keynum);
-			} else {
-				printf("release\n");
-			}
-			last_keynum = keynum;
-		}
+    // int keynum = KeyScan();
+		// if (keynum != last_keynum) {
+		// 	if (keynum != 0) {
+   	// 		printf("someone press key:%d \n", keynum);
+		// 	} else {
+		// 		printf("release\n");
+		// 	}
+		// 	last_keynum = keynum;
+		// }
+
   }
 }
 
