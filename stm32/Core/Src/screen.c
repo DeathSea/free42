@@ -1,7 +1,7 @@
 #include "screen.h"
 #include "pin.h"
 #include "stm32_handle.h"
-uint8_t LCD_BUFF[240][50] = {
+uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH] = {
 0 , 7 , 192 , 0 , 3 , 192 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 60 , 0 , 0 , 0 , 0 , 120 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
 0 , 7 , 192 , 0 , 3 , 192 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 60 , 0 , 0 , 0 , 0 , 120 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
 0 , 3 , 192 , 0 , 3 , 224 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 60 , 0 , 0 , 0 , 0 , 120 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
@@ -266,9 +266,9 @@ inline void LcdDispDisable()
 
 void ClearBuff()
 {
-	for(uint8_t line = 0; line < 240; line++) {
-		for(uint8_t row = 0; row < 50; row++) {
-			LCD_BUFF[line][row] = ~0;
+	for(uint8_t line = 0; line < LCD_DISP_BUFF_HEIGHT; line++) {
+		for(uint8_t row = 0; row < LCD_DISP_BUFF_WIDTH; row++) {
+			LCD_BUFF[line][row] = 0;
 		}
 	}
 }
@@ -286,8 +286,8 @@ void OutputBuff()
 {
 	LcdCmdEnable();
 	HAL_SPI_Transmit(&hspi2, &LCD_CMD_UPDATE, 1, HAL_MAX_DELAY);
-	for(uint8_t line = 0; line < 240; line++) {
-		uint8_t tmp = 240 - line;
+	for(uint8_t line = 0; line < LCD_DISP_BUFF_HEIGHT; line++) {
+		uint8_t tmp = LCD_DISP_BUFF_HEIGHT - line;
 		HAL_SPI_Transmit(&hspi2, &tmp, 1, 0);
 		for(int8_t row = 49; row != -1; row--) {
 			tmp = ~LCD_BUFF[line][row];
@@ -299,4 +299,13 @@ void OutputBuff()
 	HAL_SPI_Transmit(&hspi2, &LCD_CMD_NOP, 1, HAL_MAX_DELAY);
 	HAL_Delay(1);
 	LcdCmdDisable();
+}
+
+void LCDSetBuff(const uint8_t* buff, uint8_t bytesPreLine, uint8_t x, uint8_t y, uint8_t height, uint8_t width)
+{
+	for (uint8_t curY = y; curY < height; curY++) {
+		for (uint8_t curX = x; curX < width; curX++) {
+			LCD_BUFF[curY][curX] = buff[curY*bytesPreLine + curX];
+		}
+	}
 }

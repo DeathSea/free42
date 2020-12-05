@@ -1,14 +1,17 @@
 #include "shell.h"
 #include "stm32l4xx_hal.h"
+#include "screen.h"
 
 const char *shell_platform()
 {
 	return "STM_32 FREE42 ";
 }
 
+//	2 lines, 22 characters, 131×16 pixels
 void shell_blitter(const char *bits, int bytesperline, int x, int y,
                              int width, int height)
 {
+	LCDSetBuff(bits, bytesperline, x, y, height, width);
 }
 
 void shell_beeper(int frequency, int duration)
@@ -71,6 +74,16 @@ void shell_print(const char *text, int length,
 	
 void shell_get_time_date(uint4 *time, uint4 *date, int *weekday)
 {
+	date[0] = 2020;
+	date[1] = 12;
+	date[2] = 6;
+	
+	time[0] = 6;
+	time[1] = 8;
+	time[2] = 55;
+	time[3] = 999;
+
+	weekday[0] = 0;
 }
 
 void shell_message(const char *message)

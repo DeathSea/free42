@@ -150,7 +150,7 @@ extern "C" void core_init(int read_saved_state, int4 version, const char *state_
                        flags.f.rad || flags.f.grad);
 }
 
-void core_save_state(const char *state_file_name) {
+extern "C" void core_save_state(const char *state_file_name) {
     if (mode_interruptible != NULL)
         stop_interruptible();
     set_running(false);
@@ -161,7 +161,7 @@ void core_save_state(const char *state_file_name) {
     }
 }
 
-void core_cleanup() {
+extern "C" void core_cleanup() {
     free_vartype(reg_x);
     reg_x = NULL;
     free_vartype(reg_y);
@@ -182,11 +182,11 @@ void core_cleanup() {
     clean_vartype_pools();
 }
 
-void core_repaint_display() {
+extern "C" void core_repaint_display() {
     repaint_display();
 }
 
-int core_menu() {
+extern "C" int core_menu() {
     return mode_clall || get_front_menu() != NULL;
 }
 
@@ -195,18 +195,18 @@ bool alpha_active() {
     return menu != NULL && *menu >= MENU_ALPHA1 && *menu <= MENU_ALPHA_MISC2;
 }
 
-int core_alpha_menu() {
+extern "C" int core_alpha_menu() {
     return !mode_getkey && alpha_active();
 }
 
-int core_hex_menu() {
+extern "C" int core_hex_menu() {
     int *menu = get_front_menu();
     return menu != NULL && *menu == MENU_BASE_A_THRU_F;
 }
 
 static int ascii2hp(char *dst, const char *src, int maxchars);
 
-int core_keydown_command(const char *name, int *enqueued, int *repeat) {
+extern "C" int core_keydown_command(const char *name, int *enqueued, int *repeat) {
     char hpname[70];
     int len = ascii2hp(hpname, name, 63);
     int cmd = find_builtin(hpname, len, false);
@@ -217,7 +217,7 @@ int core_keydown_command(const char *name, int *enqueued, int *repeat) {
     return core_keydown(cmd == CMD_NONE ? 0 : cmd + 2048, enqueued, repeat);
 }
 
-int core_keydown(int key, int *enqueued, int *repeat) {
+extern "C" int core_keydown(int key, int *enqueued, int *repeat) {
 
     *enqueued = 0;
     *repeat = 0;
@@ -389,14 +389,14 @@ int core_keydown(int key, int *enqueued, int *repeat) {
     return 0;
 }
 
-int core_repeat() {
+extern "C" int core_repeat() {
     keydown(repeating_shift, repeating_key);
     int rpt = repeating;
     repeating = 0;
     return rpt;
 }
 
-void core_keytimeout1() {
+extern "C" void core_keytimeout1() {
     if (pending_command == CMD_LINGER1 || pending_command == CMD_LINGER2)
         return;
     if (pending_command == CMD_RUN || pending_command == CMD_SST
@@ -422,7 +422,7 @@ void core_keytimeout1() {
     }
 }
 
-void core_keytimeout2() {
+extern "C" void core_keytimeout2() {
     if (pending_command == CMD_LINGER1 || pending_command == CMD_LINGER2)
         return;
     remove_program_catalog = 0;
@@ -436,7 +436,7 @@ void core_keytimeout2() {
     }
 }
 
-bool core_timeout3(int repaint) {
+extern "C" bool core_timeout3(int repaint) {
     if (mode_pause) {
         if (repaint) {
             /* The PSE ended normally */
@@ -459,7 +459,7 @@ bool core_timeout3(int repaint) {
     return false;
 }
 
-int core_keyup() {
+extern "C" int core_keyup() {
     if (mode_pause) {
         /* The only way this can happen is if they key in question was Shift */
         return 0;
@@ -607,7 +607,7 @@ int core_keyup() {
     return (mode_running && !mode_getkey && !mode_pause) || keybuf_head != keybuf_tail;
 }
 
-int core_powercycle() {
+extern "C" int core_powercycle() {
     bool need_redisplay = false;
 
     if (mode_interruptible != NULL)
@@ -684,7 +684,7 @@ int core_powercycle() {
     return mode_running;
 }
 
-char *core_list_programs() {
+extern "C" char *core_list_programs() {
     int bufsize = 1024;
     char *buf = (char *) malloc(bufsize);
     if (buf == NULL)
@@ -1084,7 +1084,7 @@ static void export_hp42s(int index) {
     current_prgm = saved_prgm;
 }
 
-int4 core_program_size(int prgm_index) {
+extern "C" int4 core_program_size(int prgm_index) {
     int4 pc = 0;
     int cmd;
     arg_struct arg;
@@ -1202,7 +1202,7 @@ int4 core_program_size(int prgm_index) {
     return size;
 }
 
-void core_export_programs(int count, const int *indexes, const char *raw_file_name) {
+extern "C" void core_export_programs(int count, const int *indexes, const char *raw_file_name) {
     if (raw_file_name != NULL) {
 #ifdef IPHONE
         if (strncmp(raw_file_name, "mem:", 4) == 0) {
@@ -1745,7 +1745,7 @@ static phloat parse_number_line(char *buf) {
     return res;
 }
 
-void core_import_programs(int num_progs, const char *raw_file_name) {
+extern "C" void core_import_programs(int num_progs, const char *raw_file_name) {
     int i;
 
     int byte1, byte2, suffix;
@@ -2211,7 +2211,7 @@ static int complex2buf(char *buf, phloat re, phloat im, bool always_rect) {
     return bufptr;
 }
 
-char *core_copy() {
+extern "C" char *core_copy() {
     if (mode_interruptible != NULL)
         stop_interruptible();
     set_running(false);
@@ -3476,7 +3476,7 @@ static void paste_programs(const char *buf) {
     }
 }
 
-void core_paste(const char *buf) {
+extern "C" void core_paste(const char *buf) {
     if (mode_interruptible != NULL)
         stop_interruptible();
     set_running(false);

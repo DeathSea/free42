@@ -24,6 +24,9 @@
 /**********************************/
 /* Shell/Core interface functions */
 /**********************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* core_init()
  *
@@ -36,9 +39,6 @@
  * state file version number; otherwise its value is not used.
  * This is guaranteed to be the first function called on the emulator core.
  */
-#ifdef __cplusplus
-extern "C"
-#endif
 void core_init(int read_state, int4 version, const char *state_file_name, int offset);
 
 /* core_save_state()
@@ -293,6 +293,9 @@ char *core_copy();
  * Used by the shell to implement the Paste command.
  */
 void core_paste(const char *s);
+#ifdef __cplusplus
+}
+#endif
 
 /* core_settings
  *

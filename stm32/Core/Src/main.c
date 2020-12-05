@@ -48,21 +48,27 @@ int main(void)
   MX_USART2_UART_Init();
 
   int last_keynum = 0;
+  int key_enqueued = 0;
+  int key_repeat = 0;
 
   init_calc();
   /* Infinite loop */
   while (1)
   {
-    // int keynum = KeyScan();
-		// if (keynum != last_keynum) {
-		// 	if (keynum != 0) {
-   	// 		printf("someone press key:%d \n", keynum);
-		// 	} else {
-		// 		printf("release\n");
-		// 	}
-		// 	last_keynum = keynum;
-		// }
-
+    int keynum = KeyScan();
+		if (keynum != last_keynum) {
+			if (keynum != 0) {
+        // key press
+        core_keydown(keynum, key_enqueued, key_repeat);
+			} else {
+        // key release
+        if (key_enqueued != 1) {
+          core_keyup();
+        }
+			}
+			last_keynum = keynum;
+		}
+    OutputBuff();
   }
 }
 
