@@ -11,7 +11,7 @@ const char *shell_platform()
 void shell_blitter(const char *bits, int bytesperline, int x, int y,
                              int width, int height)
 {
-	LCDSetBuff(bits, bytesperline, x, y, height, width);
+	LCDSetBuff(bits, bytesperline, x, y, height, width, 1);
 }
 
 void shell_beeper(int frequency, int duration)

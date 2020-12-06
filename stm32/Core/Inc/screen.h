@@ -15,5 +15,7 @@ extern uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH];
 void ClearBuff(void);
 void ClearLCD(void);
 void OutputBuff(void);
-void LCDSetBuff(const uint8_t* buff, uint8_t bytesPreLine, uint8_t x, uint8_t y, uint8_t height, uint8_t width);
+void LCDSetBuff(const uint8_t* buff, uint8_t bytesPreLine, uint8_t x, uint8_t y, uint8_t height, uint8_t width, uint8_t reverbyte);
+void LcdDispEnable();
+void LcdDispDisable();
 #endif

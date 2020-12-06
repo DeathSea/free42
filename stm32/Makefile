@@ -20,7 +20,7 @@ TARGET = free42_stm32
 # building variables
 ######################################
 # debug build?
-DEBUG = 0
+DEBUG = 1
 # optimization
 OPT = -O3
 

@@ -51,6 +51,10 @@ int main(void)
   int key_enqueued = 0;
   int key_repeat = 0;
 
+	LcdDispEnable();
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+	ClearLCD();
+
   init_calc();
   /* Infinite loop */
   while (1)
