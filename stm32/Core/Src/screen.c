@@ -82,8 +82,9 @@ void OutputBuff()
 
 void LCDSetBuff(const uint8_t* buff, uint8_t bytesPreLine, uint8_t x, uint8_t y, uint8_t height, uint8_t width, uint8_t reverbyte)
 {
-	for (uint8_t curY = y; curY < height; curY++) {
-		for (uint8_t curX = x; curX < width; curX++) {
+	uint8_t bytes_width = (width / 8) > bytesPreLine ? bytesPreLine : (width / 8);
+	for (uint8_t curY = y, remain_height = height; remain_height != 0; curY++, remain_height--) {
+		for (uint8_t curX = x; curX < bytes_width; curX++) {
 			if (reverbyte != 0) {
 				LCD_BUFF[curY][curX] = BitReverseTable256[buff[curY*bytesPreLine + curX]];
 			} else {
