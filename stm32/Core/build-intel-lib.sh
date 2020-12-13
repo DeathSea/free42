@@ -9,7 +9,7 @@ if [ -z $MK ]; then
     MK=make
   fi
 fi
-PATH=$PATH:/home/deathsea/gcc-arm-none-eabi-7-2018-q2-update/bin/
+PATH=$PATH:/home/deathsea/gcc-arm-none-eabi-7-2018-q2-update/bin/:/d/tools/gcc-arm-none-eabi-9-2020-q2-update-win32/bin/
 which arm-none-eabi-gcc >/dev/null
 if [ $? -eq 0 ]; then
   CC=arm-none-eabi-gcc
@@ -55,6 +55,7 @@ patch -p0 <../intel-lib-unknown-32bit.patch
 cd LIBRARY
 sed -i 's/\(CC_NAME_LIST  := .*\)/\1 arm-none-eabi-gcc/g;s/\(CC_TYPE_LIST  := .*\)/\1 gcc/g' makefile.iml_head
 sed -i 's/ar rv/arm-none-eabi-ar rv/g' makefile.iml_head
+sed -i 's/\(OS_ALIAS     := .*\)/\1 MINGW64_NT-10.0/g;s/\(OS_MAP_LIST  := .*\)/\1 LINUX/g'  makefile.iml_head
 sed -i "s/\(_CFLAGS_OPT    :=\)/\1 -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O3 -Wall -fdata-sections -ffunction-sections /g" makefile
 $MK $OS_ARG CC=$CC CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0 $ENDIAN_ARG
 mv libbid.a ../../gcc111libbid.a

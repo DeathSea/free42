@@ -2,6 +2,7 @@
 #include "pin.h"
 #include "stm32_handle.h"
 uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH] = {0};
+LCD_CHANGE = 0;
 
 static const uint8_t BitReverseTable256[] =
 {
@@ -78,18 +79,35 @@ void OutputBuff()
 	HAL_SPI_Transmit(&hspi2, &LCD_CMD_NOP, 1, HAL_MAX_DELAY);
 	HAL_Delay(1);
 	LcdCmdDisable();
+	LCD_CHANGE = 0;
 }
 
 void LCDSetBuff(const uint8_t* buff, uint8_t bytesPreLine, uint8_t x, uint8_t y, uint8_t height, uint8_t width, uint8_t reverbyte)
 {
-	uint8_t bytes_width = (width / 8) > bytesPreLine ? bytesPreLine : (width / 8);
-	for (uint8_t curY = y, remain_height = height; remain_height != 0; curY++, remain_height--) {
-		for (uint8_t curX = x; curX < bytes_width; curX++) {
-			if (reverbyte != 0) {
-				LCD_BUFF[curY][curX] = BitReverseTable256[buff[curY*bytesPreLine + curX]];
-			} else {
-			    LCD_BUFF[curY][curX] = buff[curY*bytesPreLine + curX];
+	// uint8_t bytes_width = (width / 8) > bytesPreLine ? bytesPreLine : (width / 8);
+	// for (uint8_t curY = y, remain_height = height; remain_height != 0; curY++, remain_height--) {
+	// 	for (uint8_t curX = x; curX < bytes_width; curX++) {
+	// 		if (reverbyte != 0) {
+	// 			LCD_BUFF[curY][curX] = BitReverseTable256[buff[curY*bytesPreLine + curX]];
+	// 		} else {
+	// 		    LCD_BUFF[curY][curX] = buff[curY*bytesPreLine + curX];
+	// 		}
+	// 	}
+	// }
+	// enlarge 3 times
+	for (uint8_t y = 0; y < 48; y ++) {
+		uint8_t orig_y = y / 3;
+		for (uint8_t x = 0; x < 50; x++) {
+			uint8_t c = 0;
+			for (uint8_t pos = 0; pos < 8; pos++) {
+				uint8_t poss = (8*x + pos)/3;
+				uint8_t coresponseByte = BitReverseTable256[buff[orig_y * bytesPreLine + (poss >> 3)]];
+				if ((coresponseByte & (1 << (7 - (poss&7)))) != 0) {
+					c |= (1 << (7 - pos));
+				} 
 			}
+			LCD_BUFF[y][x] = c;
 		}
 	}
+	LCD_CHANGE = 1;
 }

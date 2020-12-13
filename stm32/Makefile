@@ -149,7 +149,8 @@ C_DEFS =  \
 -DDECIMAL_GLOBAL_EXCEPTION_FLAGS=1 \
 -DECIMAL_GLOBAL_EXCEPTION_FLAGS_ACCESS_FUNCTIONS=1 \
 -D_WCHAR_T_DEFINED \
--DLINUX 
+-DLINUX #\
+#-DBCD_MATH=1
 
 # AS includes
 AS_INCLUDES = 
@@ -189,7 +190,7 @@ LDSCRIPT = STM32L476RGTx_FLASH.ld
 # libraries
 LIBS = -lgcc111libbid -lc -lm#-lnosys #-lc -lm 
 LIBDIR = -L./
-LDFLAGS = $(MCU) -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs -u _scanf_float -u _printf_float -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin

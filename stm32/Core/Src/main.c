@@ -72,7 +72,9 @@ int main(void)
 			}
 			last_keynum = keynum;
 		}
-    OutputBuff();
+    if (LCD_CHANGE == 1) {
+      OutputBuff();
+    }
   }
 }
 
