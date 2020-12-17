@@ -176,7 +176,7 @@ void check_timeout()
 {
     uint32_t cur_tick = HAL_GetTick();
     for (uint8_t timer_index = 0; timer_index < TIMER_END; timer_index++) {
-        if (g_timer[timer_index].start_tick - cur_tick) {
+        if ((g_timer[timer_index].enable) == 1 && (g_timer[timer_index].start_tick - cur_tick >= g_timer[timer_index].timeout)) {
             g_timer[timer_index].callback();
         }
     }
@@ -218,7 +218,7 @@ int main(void)
             if (keynum != 0) {
                 end_timer();
                 // key press
-                keyrunning = core_keydown(keynum, key_enqueued, key_repeat);
+                keyrunning = core_keydown(keynum, &key_enqueued, &key_repeat);
                 if (g_timer[TIMER_TIMEROUT3].enable == 1 && keynum != 28) {
                     end_timer3();
                     core_timeout3(0);
