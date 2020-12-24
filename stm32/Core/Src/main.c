@@ -7,7 +7,6 @@
 #include "stdio.h"
 #include "core_main.h"
 
-
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim3;
@@ -183,6 +182,32 @@ void check_timeout()
 }
 /* USER CODE END 0 */
 
+uint8_t key_get()
+{
+    static uint8_t old_key[2] = {0};
+    static uint8_t old_press_num = 0;
+    uint8_t new_key[2] = {0};
+    uint8_t press_num;
+    key_scan(new_key, 2, &press_num);
+    // press key number less than old
+    if (press_num < old_press_num) {
+        old_press_num = press_num;
+        old_key[0] = new_key[0];
+        new_key[1] = new_key[1];
+        return 0;
+    } else if (press_num == old_press_num) {
+        return new_key[1];
+    } else {
+        if (new_key[0] == old_key[0]) {
+            old_key[1] = new_key[1];
+            return new_key[1];
+        } else {
+            old_key[1] = new_key[0];
+            return new_key[0];
+        }
+    }
+}
+
 /**
 * @brief  The application entry point.
 * @retval int
@@ -212,7 +237,7 @@ int main(void)
     while (1)
     {
         check_timeout();
-        keynum = KeyScan();
+        keynum = key_get();
         int keyrunning = 1;
         if (keynum != last_keynum) {
             if (keynum != 0) {
