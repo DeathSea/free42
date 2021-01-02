@@ -43,7 +43,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     uint8_t rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[1][i];
                 if (*press_num > list_size) {
                     return;
@@ -62,7 +62,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[2][i];
                 if (*press_num > list_size) {
                     return;
@@ -81,7 +81,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[3][i];
                 if (*press_num > list_size) {
                     return;
@@ -100,7 +100,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[4][i];
                 if (*press_num > list_size) {
                     return;
@@ -119,7 +119,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[5][i];
                 if (*press_num > list_size) {
                     return;
@@ -138,7 +138,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
     rowKey = KeyGetRow();
     if (rowKey != 0) {
         for (uint8_t i = 1; i < 8; i++) {
-            if ((rowKey & (1 << i)) != 0) {
+            if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[6][i];
                 if (*press_num > list_size) {
                     return;

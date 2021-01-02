@@ -27,6 +27,7 @@ int fputc(int c, FILE *stream)
 void init_calc()
 {
     core_init(0, 0, NULL, 0);
+    core_powercycle();
 }
 
 void main_timeout1();
@@ -175,7 +176,7 @@ void check_timeout()
 {
     uint32_t cur_tick = HAL_GetTick();
     for (uint8_t timer_index = 0; timer_index < TIMER_END; timer_index++) {
-        if ((g_timer[timer_index].enable) == 1 && (g_timer[timer_index].start_tick - cur_tick >= g_timer[timer_index].timeout)) {
+        if ((g_timer[timer_index].enable) == 1 && (cur_tick - g_timer[timer_index].start_tick >= g_timer[timer_index].timeout)) {
             g_timer[timer_index].callback();
         }
     }
