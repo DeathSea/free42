@@ -265,6 +265,8 @@ int main(void)
     {
         check_timeout();
         key_get(&key, &key_count);
+        // TODO: TWO key press need adjust hardward setting 
+        // TODO: the key when press two key is behave difference in win free 42 need adjust
         int keyrunning = 1;
         if (key != last_keynum) {
             if (key != 0) {
