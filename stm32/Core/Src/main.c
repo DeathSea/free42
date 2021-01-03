@@ -69,12 +69,12 @@ struct timer {
         0, 0, 200, main_repeater
     }
 };
-int keynum = 0;
+uint8_t key = 0;
 
 void main_timeout1()
 {
     end_timer();
-    if (keynum != 0) {
+    if (key != 0) {
         core_keytimeout1();
         cur_timer = TIMER_TIMEROUT2;
         start_timer2();
@@ -84,7 +84,7 @@ void main_timeout1()
 void main_timeout2()
 {
     end_timer();
-    if (keynum != 0) {
+    if (key != 0) {
         core_keytimeout2();
     }
 }
@@ -183,28 +183,52 @@ void check_timeout()
 }
 /* USER CODE END 0 */
 
-uint8_t key_get()
+void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
     static uint8_t old_press_num = 0;
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
+    // printf("key press %d and %d ,press_num = %d\n",new_key[0], new_key[1], press_num);
     // press key number less than old
     if (press_num < old_press_num) {
         old_press_num = press_num;
+        *key_count = old_press_num;
         old_key[0] = new_key[0];
-        new_key[1] = new_key[1];
-        return 0;
+        old_key[1] = new_key[1];
+        *key = 0;
     } else if (press_num == old_press_num) {
-        return new_key[1];
+        *key_count = press_num;
+        switch(press_num) {
+            case 0:
+                *key = 0;
+                return;
+            case 1:
+                *key = old_key[0];
+                return;
+            case 2:
+                *key = old_key[1];
+                return;
+            default:
+                *key = 0;
+                return;
+        }
     } else {
-        if (new_key[0] == old_key[0]) {
+        old_press_num = press_num;
+        *key_count = press_num;
+        if (press_num == 1) { // from zero to one
+            old_key[0] = new_key[0];
             old_key[1] = new_key[1];
-            return new_key[1];
-        } else {
-            old_key[1] = new_key[0];
-            return new_key[0];
+            *key =  new_key[0];
+        } else { // from one to two
+            if (old_key[0] == new_key[1]) {
+                old_key[1] = new_key[0];
+                *key =  new_key[0];
+            } else {
+                old_key[1] = new_key[1];
+                *key =  new_key[1];
+            }
         }
     }
 }
@@ -228,6 +252,8 @@ int main(void)
     int last_keynum = 0;
     int key_enqueued = 0;
     int key_repeat = 0;
+    uint8_t has_more_key = 0;
+    uint8_t key_count = 0;
 
     LcdDispEnable();
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
@@ -238,14 +264,18 @@ int main(void)
     while (1)
     {
         check_timeout();
-        keynum = key_get();
+        key_get(&key, &key_count);
         int keyrunning = 1;
-        if (keynum != last_keynum) {
-            if (keynum != 0) {
+        if (key != last_keynum) {
+            if (key != 0) {
+                if (has_more_key) {
+                    last_keynum = key;
+                    continue;
+                }
                 end_timer();
                 // key press
-                keyrunning = core_keydown(keynum, &key_enqueued, &key_repeat);
-                if (g_timer[TIMER_TIMEROUT3].enable == 1 && keynum != 28) {
+                keyrunning = core_keydown(key, &key_enqueued, &key_repeat);
+                if (g_timer[TIMER_TIMEROUT3].enable == 1 && key != 28) {
                     end_timer3();
                     core_timeout3(0);
                 }
@@ -258,14 +288,20 @@ int main(void)
                         start_timer1();
                     }
                 }
+                if (key_count > 1) {
+                    has_more_key = 1;
+                }
             } else {
                 end_timer();
                 // key release
                 if (key_enqueued != 1) {
                     core_keyup();
                 }
+                if (key_count < 1) {
+                    has_more_key = 0;
+                }
             }
-            last_keynum = keynum;
+            last_keynum = key;
         }
         if (LCD_CHANGE == 1) {
             OutputBuff();
