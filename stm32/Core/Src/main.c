@@ -281,11 +281,11 @@ int main(void)
                     end_timer3();
                     core_timeout3(0);
                 }
-                if (keyrunning != 0) {
+                if (!keyrunning) {
                     if (key_repeat != 0) {
                         cur_timer = TIMER_REPEATER;
                         start_repeater(key_repeat == 1 ? 1000 : 500);
-                    } else if (key_enqueued != 0) {
+                    } else if (!key_enqueued) {
                         cur_timer = TIMER_TIMEROUT1;
                         start_timer1();
                     }
