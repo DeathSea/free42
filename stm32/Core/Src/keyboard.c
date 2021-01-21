@@ -6,17 +6,23 @@ uint32_t KeyGetRow()
     uint32_t row = 0;
     if (HAL_GPIO_ReadPin(ROW1_GPIO_Port, ROW1_Pin) == GPIO_PIN_RESET) {
         row |= 0x01; // 1
-    } else if (HAL_GPIO_ReadPin(ROW2_GPIO_Port, ROW2_Pin) == GPIO_PIN_RESET) {
+    }
+    if (HAL_GPIO_ReadPin(ROW2_GPIO_Port, ROW2_Pin) == GPIO_PIN_RESET) {
         row |= 0x02; // 2
-    } else if (HAL_GPIO_ReadPin(ROW3_GPIO_Port, ROW3_Pin) == GPIO_PIN_RESET) {
+    }
+    if (HAL_GPIO_ReadPin(ROW3_GPIO_Port, ROW3_Pin) == GPIO_PIN_RESET) {
         row |= 0x04; // 3
-    } else if (HAL_GPIO_ReadPin(ROW4_GPIO_Port, ROW4_Pin) == GPIO_PIN_RESET) {
+    }
+    if (HAL_GPIO_ReadPin(ROW4_GPIO_Port, ROW4_Pin) == GPIO_PIN_RESET) {
         row |= 0x08; // 4
-    } else if(HAL_GPIO_ReadPin(ROW5_GPIO_Port, ROW5_Pin) == GPIO_PIN_RESET) {
+    }
+    if(HAL_GPIO_ReadPin(ROW5_GPIO_Port, ROW5_Pin) == GPIO_PIN_RESET) {
         row |= 0x10; // 5
-    } else if (HAL_GPIO_ReadPin(ROW6_GPIO_Port, ROW6_Pin) == GPIO_PIN_RESET) {
+    }
+    if (HAL_GPIO_ReadPin(ROW6_GPIO_Port, ROW6_Pin) == GPIO_PIN_RESET) {
         row |= 0x20; // 6
-    } else if (HAL_GPIO_ReadPin(ROW7_GPIO_Port, ROW7_Pin) == GPIO_PIN_RESET) {
+    }
+    if (HAL_GPIO_ReadPin(ROW7_GPIO_Port, ROW7_Pin) == GPIO_PIN_RESET) {
         row |= 0x40; // 7
     }
     return row;
@@ -45,7 +51,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[1][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
@@ -64,7 +70,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[2][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
@@ -83,7 +89,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[3][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
@@ -102,7 +108,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[4][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
@@ -121,7 +127,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[5][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
@@ -140,7 +146,7 @@ void key_scan(uint8_t *press_key_list, uint8_t list_size, uint8_t* press_num)
         for (uint8_t i = 1; i < 8; i++) {
             if ((rowKey & (1 << (i - 1))) != 0) {
                 press_key_list[(*press_num) ++] = keyMap[6][i];
-                if (*press_num > list_size) {
+                if (*press_num >= list_size) {
                     return;
                 }
             }
