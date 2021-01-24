@@ -19,11 +19,6 @@ static void MX_SPI2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART2_UART_Init(void);
 
-int fputc(int c, FILE *stream)
-{
-    return(ITM_SendChar(c));
-}
-
 void init_calc()
 {
     core_init(0, 0, NULL, 0);
@@ -190,8 +185,7 @@ void key_get(uint8_t* key, uint8_t* key_count)
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
-    // printf("key press %d and %d ,press_num = %d\n",new_key[0], new_key[1], press_num);
-    // press key number less than old
+    // press key number less than old, meaning one key release
     if (press_num < old_press_num) {
         old_press_num = press_num;
         *key_count = old_press_num;
