@@ -185,12 +185,18 @@ void key_get(uint8_t* key, uint8_t* key_count)
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
+    // as i test in the windows,
+    // if there was one key press with the shift key at the same time,
+    // those two must release at once
+    // if there was one key press with any other key (no shift key)
+    // the windows will release one key first and press another key immediately
+    // so, no matter how many key is press, all key will release
     // press key number less than old, meaning one key release
     if (press_num < old_press_num) {
-        old_press_num = press_num;
+        old_press_num = 0;
         *key_count = old_press_num;
-        old_key[0] = new_key[0];
-        old_key[1] = new_key[1];
+        old_key[0] = 0;
+        old_key[1] = 0;
         *key = 0;
     } else if (press_num == old_press_num) {
         *key_count = press_num;
@@ -211,7 +217,10 @@ void key_get(uint8_t* key, uint8_t* key_count)
     } else {
         old_press_num = press_num;
         *key_count = press_num;
-        if (press_num == 1) { // from zero to one
+        // from zero to one
+        // press one key
+        // the shift key only press when it is release
+        if (press_num == 1) {
             old_key[0] = new_key[0];
             old_key[1] = new_key[1];
             *key =  new_key[0];
