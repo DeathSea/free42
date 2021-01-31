@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "stdio.h"
 #include "core_main.h"
+#include "key.h"
 
 SPI_HandleTypeDef hspi2;
 
@@ -182,6 +183,8 @@ void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
     static uint8_t old_press_num = 0;
+    static uint8_t ignore_next_key_action = 0;
+    static uint8_t one_key_wait_next_time = 100;
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
@@ -193,11 +196,16 @@ void key_get(uint8_t* key, uint8_t* key_count)
     // so, no matter how many key is press, all key will release
     // press key number less than old, meaning one key release
     if (press_num < old_press_num) {
-        old_press_num = 0;
-        *key_count = old_press_num;
-        old_key[0] = 0;
-        old_key[1] = 0;
-        *key = 0;
+        if (old_press_num == 1) {
+            old_press_num = 0;
+            *key_count = 0;
+            old_key[0] = 0;
+            old_key[1] = 0;
+            *key = 0;
+            return ;
+        } else if (old_press_num == 2) {
+
+        }
     } else if (press_num == old_press_num) {
         *key_count = press_num;
         switch(press_num) {
@@ -223,14 +231,37 @@ void key_get(uint8_t* key, uint8_t* key_count)
         if (press_num == 1) {
             old_key[0] = new_key[0];
             old_key[1] = new_key[1];
-            *key =  new_key[0];
-        } else { // from one to two
-            if (old_key[0] == new_key[1]) {
-                old_key[1] = new_key[0];
-                *key =  new_key[0];
+            if (new_key[0] == SHIFT_KEY) {
+                *key = 0;
             } else {
+                *key = new_key[0];
+            }
+        } else { // from one to two
+            // new key pos 0 is pre key
+            if (old_key[0] == new_key[0]) {
+                old_key[0] = new_key[0];
                 old_key[1] = new_key[1];
-                *key =  new_key[1];
+                if (old_key[0] == SHIFT_KEY) {
+                    *key = new_key[1];
+                } else if (old_key[1] == SHIFT_KEY) {
+                    *key = new_key[0];
+                } else {
+                    // two no shift key press ,one key up
+                    *key = 0;
+                    *key_count = 1;
+                }
+            } else {
+                old_key[0] = new_key[1];
+                old_key[1] = new_key[0];
+                if (old_key[0] == SHIFT_KEY) {
+                    *key = new_key[1];
+                } else if (old_key[1] == SHIFT_KEY) {
+                    *key = new_key[0];
+                } else {
+                    *key = 0;
+                    *key_count = 1;
+                }
+
             }
         }
     }
