@@ -10,8 +10,8 @@ static uint8_t LCD_CMD_NOP = 0x00;
 #define LCD_DISP_WIDHT 400
 #define LCD_DISP_BUFF_HEIGHT LCD_DISP_HEIGHT
 #define LCD_DISP_BUFF_WIDTH 50
-extern uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH];
-extern int LCD_CHANGE;
+uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH];
+int LCD_CHANGE;
 
 void ClearBuff(void);
 void ClearLCD(void);

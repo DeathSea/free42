@@ -68,6 +68,7 @@ Core/Src/screen.c \
 Core/Src/shell_main.c \
 Core/Src/stm32_handle.c \
 Core/Src/system_stm32l4xx.c \
+Core/src/timer.c
 
 # C sources
 C_SOURCES =  $(DEVLP_C_SOURCES) \

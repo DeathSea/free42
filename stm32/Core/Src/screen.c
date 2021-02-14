@@ -1,7 +1,6 @@
 #include "screen.h"
 #include "pin.h"
 #include "stm32_handle.h"
-uint8_t LCD_BUFF[LCD_DISP_BUFF_HEIGHT][LCD_DISP_BUFF_WIDTH] = {0};
 LCD_CHANGE = 0;
 
 static const uint8_t BitReverseTable256[] =

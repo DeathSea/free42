@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "core_main.h"
 #include "key.h"
+#include "timer.h"
 
 SPI_HandleTypeDef hspi2;
 
@@ -20,160 +21,46 @@ static void MX_SPI2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART2_UART_Init(void);
 
+void init_env()
+{
+    g_timer[TIMER_TIMEROUT1].enable = 0;
+    g_timer[TIMER_TIMEROUT1].start_tick = 0;
+    g_timer[TIMER_TIMEROUT1].timeout = 250;
+    g_timer[TIMER_TIMEROUT1].callback = main_timeout1;
+
+    g_timer[TIMER_TIMEROUT2].enable = 0;
+    g_timer[TIMER_TIMEROUT2].start_tick = 0;
+    g_timer[TIMER_TIMEROUT2].timeout = 1750;
+    g_timer[TIMER_TIMEROUT2].callback = main_timeout2;
+
+    g_timer[TIMER_TIMEROUT3].enable = 0;
+    g_timer[TIMER_TIMEROUT3].start_tick = 0;
+    g_timer[TIMER_TIMEROUT3].timeout = 0;
+    g_timer[TIMER_TIMEROUT3].callback = main_timeout3;
+
+    g_timer[TIMER_REPEATER].enable = 0;
+    g_timer[TIMER_REPEATER].start_tick = 0;
+    g_timer[TIMER_REPEATER].timeout = 200;
+    g_timer[TIMER_REPEATER].callback = main_repeater;
+
+    cur_timer = TIMER_END;
+
+}
+
 void init_calc()
 {
     core_init(0, 0, NULL, 0);
     core_powercycle();
 }
 
-void main_timeout1();
-void main_timeout2();
-void main_timeout3();
-void main_repeater();
-void start_timer1();
-void end_timer1();
-void start_timer2();
-void end_timer2();
-void start_timer3();
-void end_timer3();
-void start_repeater(uint32_t delay);
-void end_repeater();
-
-#define TIMER_TIMEROUT1 0
-#define TIMER_TIMEROUT2 1
-#define TIMER_TIMEROUT3 2
-#define TIMER_REPEATER 3
-#define TIMER_END 4
-uint8_t cur_timer = TIMER_END;
-struct timer {
-    uint8_t enable;
-    uint32_t start_tick;
-    uint32_t timeout;
-    void (* callback)(void);
-    uint8_t timer_type;
-} g_timer[] = {
-    {
-        0, 0, 250, main_timeout1
-    },
-    {
-        0, 0, 1750, main_timeout2
-    },
-    {
-        0, 0, 0, main_timeout3
-    }, 
-    {
-        0, 0, 200, main_repeater
-    }
-};
 uint8_t key = 0;
-
-void main_timeout1()
-{
-    end_timer();
-    if (key != 0) {
-        core_keytimeout1();
-        cur_timer = TIMER_TIMEROUT2;
-        start_timer2();
-    }
-}
-
-void main_timeout2()
-{
-    end_timer();
-    if (key != 0) {
-        core_keytimeout2();
-    }
-}
-
-void main_timeout3()
-{
-    end_timer3();
-    core_timeout3(1);
-}
-
-void main_repeater()
-{
-    end_timer();
-    int repeat = core_repeat();
-    if (repeat != 0) {
-        if (repeat == 1) {
-            cur_timer = TIMER_REPEATER;
-            start_repeater(200);
-        } else {
-            cur_timer = TIMER_REPEATER;
-            start_repeater(100);
-        }
-    } else {
-        cur_timer = TIMER_TIMEROUT1;
-        start_timer1();
-    }
-}
-
-void end_timer()
-{
-    if (cur_timer != TIMER_END) {
-        g_timer[cur_timer].enable = 0;
-        g_timer[cur_timer].start_tick = 0;
-        cur_timer = TIMER_END;
-    }
-}
-
-void end_timer1()
-{
-    g_timer[TIMER_TIMEROUT1].enable = 0;
-    g_timer[TIMER_TIMEROUT1].start_tick = 0;
-}
-
-void start_timer1()
-{
-    g_timer[TIMER_TIMEROUT1].enable = 1;
-    g_timer[TIMER_TIMEROUT1].start_tick = HAL_GetTick();
-}
-
-void end_timer2()
-{
-    g_timer[TIMER_TIMEROUT2].enable = 0;
-    g_timer[TIMER_TIMEROUT2].start_tick = 0;
-}
-
-void start_timer2()
-{
-    g_timer[TIMER_TIMEROUT2].enable = 1;
-    g_timer[TIMER_TIMEROUT2].start_tick = HAL_GetTick();
-}
-
-void end_timer3()
-{
-    g_timer[TIMER_TIMEROUT3].enable = 0;
-    g_timer[TIMER_TIMEROUT3].start_tick = 0;
-}
-
-void start_timer3()
-{
-    g_timer[TIMER_TIMEROUT3].enable = 1;
-    g_timer[TIMER_TIMEROUT3].start_tick = HAL_GetTick();
-}
-
-void end_repeater()
-{
-    g_timer[TIMER_REPEATER].enable = 0;
-    g_timer[TIMER_REPEATER].start_tick = 0;
-}
-
-void start_repeater(uint32_t delay)
-{
-    g_timer[TIMER_REPEATER].enable = 1;
-    g_timer[TIMER_REPEATER].start_tick = HAL_GetTick();
-    g_timer[TIMER_REPEATER].timeout = delay;
-}
-
 
 void check_timeout()
 {
     uint32_t cur_tick = HAL_GetTick();
     for (uint8_t timer_index = 0; timer_index < TIMER_END; timer_index++) {
         if ((g_timer[timer_index].enable == 1) && (cur_tick > g_timer[timer_index].start_tick) && (cur_tick - g_timer[timer_index].start_tick >= g_timer[timer_index].timeout)) {
-            g_timer[timer_index].callback();
+            g_timer[timer_index].callback(key);
         }
     }
 }
@@ -281,7 +168,6 @@ void key_get(uint8_t* key, uint8_t* key_count)
                     *key = 0;
                     *key_count = 1;
                 }
-
             }
         }
     }
@@ -313,6 +199,7 @@ int main(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
     ClearLCD();
 
+    init_env();
     init_calc();
     /* Infinite loop */
     while (1)
