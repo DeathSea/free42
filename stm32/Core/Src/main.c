@@ -184,7 +184,7 @@ void key_get(uint8_t* key, uint8_t* key_count)
     static uint8_t old_key[2] = {0};
     static uint8_t old_press_num = 0;
     static uint8_t ignore_next_key_action = 0;
-    static uint8_t one_key_wait_next_time = 100;
+    static uint8_t two_key_release_one = 0;
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
@@ -198,14 +198,18 @@ void key_get(uint8_t* key, uint8_t* key_count)
     if (press_num < old_press_num) {
         if (old_press_num == 1) {
             old_press_num = 0;
-            *key_count = 0;
             old_key[0] = 0;
             old_key[1] = 0;
-            *key = 0;
             return ;
         } else if (old_press_num == 2) {
-
+            old_press_num = 1;
+            old_key[0] = new_key[0];
+            old_key[1] = new_key[1];
+            two_key_release_one = 1;
         }
+        *key_count = 0;
+        *key = 0;
+        return;
     } else if (press_num == old_press_num) {
         *key_count = press_num;
         switch(press_num) {
@@ -213,10 +217,25 @@ void key_get(uint8_t* key, uint8_t* key_count)
                 *key = 0;
                 return;
             case 1:
-                *key = old_key[0];
+                // when it's the two key press and release one key ,
+                // should ignore another key press
+                if (two_key_release_one) {
+                    *key = 0;
+                } else {
+                    *key = old_key[0];
+                }
                 return;
             case 2:
-                *key = old_key[1];
+                // return press two key mean shift key and return key press
+                if (old_key[0] == KEY_SHIFT) {
+                    *key = old_key[1];
+                } else if (old_key[1] == KEY_SHIFT) {
+                    *key = old_key[0];
+                    *key_count = 1;
+                } else {
+                    *key = old_key[1];
+                    *key_count = 1;
+                }
                 return;
             default:
                 *key = 0;
@@ -231,7 +250,7 @@ void key_get(uint8_t* key, uint8_t* key_count)
         if (press_num == 1) {
             old_key[0] = new_key[0];
             old_key[1] = new_key[1];
-            if (new_key[0] == SHIFT_KEY) {
+            if (new_key[0] == KEY_SHIFT) {
                 *key = 0;
             } else {
                 *key = new_key[0];
@@ -241,9 +260,9 @@ void key_get(uint8_t* key, uint8_t* key_count)
             if (old_key[0] == new_key[0]) {
                 old_key[0] = new_key[0];
                 old_key[1] = new_key[1];
-                if (old_key[0] == SHIFT_KEY) {
+                if (old_key[0] == KEY_SHIFT) {
                     *key = new_key[1];
-                } else if (old_key[1] == SHIFT_KEY) {
+                } else if (old_key[1] == KEY_SHIFT) {
                     *key = new_key[0];
                 } else {
                     // two no shift key press ,one key up
@@ -253,9 +272,9 @@ void key_get(uint8_t* key, uint8_t* key_count)
             } else {
                 old_key[0] = new_key[1];
                 old_key[1] = new_key[0];
-                if (old_key[0] == SHIFT_KEY) {
+                if (old_key[0] == KEY_SHIFT) {
                     *key = new_key[1];
-                } else if (old_key[1] == SHIFT_KEY) {
+                } else if (old_key[1] == KEY_SHIFT) {
                     *key = new_key[0];
                 } else {
                     *key = 0;
