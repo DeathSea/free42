@@ -200,6 +200,7 @@ void key_get(uint8_t* key, uint8_t* key_count)
             old_press_num = 0;
             old_key[0] = 0;
             old_key[1] = 0;
+            two_key_release_one = 0;
             return ;
         } else if (old_press_num == 2) {
             old_press_num = 1;
@@ -323,13 +324,18 @@ int main(void)
         int keyrunning = 1;
         if (key != last_keynum) {
             if (key != 0) {
-                if (has_more_key) {
-                    last_keynum = key;
-                    continue;
-                }
                 end_timer();
                 // key press
                 keyrunning = core_keydown(key, &key_enqueued, &key_repeat);
+                if (!key_enqueued) {
+                    core_keyup();
+                }
+                if (key_count == 2) {
+                    keyrunning = core_keydown(KEY_SHIFT, &key_enqueued, &key_repeat);
+                    if (!key_enqueued) {
+                        core_keyup();
+                    }
+                }
                 if (g_timer[TIMER_TIMEROUT3].enable == 1 && key != 28) {
                     end_timer3();
                     core_timeout3(0);
@@ -342,18 +348,6 @@ int main(void)
                         cur_timer = TIMER_TIMEROUT1;
                         start_timer1();
                     }
-                }
-                if (key_count > 1) {
-                    has_more_key = 1;
-                }
-            } else {
-                end_timer();
-                // key release
-                if (key_enqueued != 1) {
-                    core_keyup();
-                }
-                if (key_count < 1) {
-                    has_more_key = 0;
                 }
             }
             last_keynum = key;
