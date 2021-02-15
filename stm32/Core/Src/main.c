@@ -66,107 +66,133 @@ void check_timeout()
 }
 /* USER CODE END 0 */
 
+enum key_state {
+    KEY_STATE_A, 
+    KEY_STATE_B, 
+    KEY_STATE_C,
+    KEY_STATE_D,
+    KEY_STATE_E,
+    KEY_STATE_F,
+    KEY_STATE_G,
+    KEY_STATE_H
+};
+// NS = non-shift
+// |                                                 | shift-key press | shift-key release | NS-key press | NS-key release |  no action   |
+// |       A no key press, return key_none           |       B         | ----------------- |      C       | -------------- | ------------ |
+// |       B shift key press, return key_none        | --------------- |         D         |      E       | -------------- | ------------ |
+// | C one non-shift key press, return the key press |       F         | ----------------- |      G       |       A        | ------------ |
+// |     D shift key release, return shift key       | --------------- | ----------------- | ------------ | -------------- |       A      |
+// |    E shift + key press, return the key press    | --------------- |         H         | ------------ |       B        | ------------ |
+// |    F key + shift press, return the key press    | --------------- |         H         | ------------ |       B        | ------------ |
+// |    G NS key 1 + NS key 2, return key_none       | --------------- | ----------------- | ------------ |       H        | return key 2 |
+// |    H release one of two key, return none        |       H         | ----------------- |      G       |       A        | ------------ |
 void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
     static uint8_t old_press_num = 0;
-    static uint8_t ignore_next_key_action = 0;
-    static uint8_t two_key_release_one = 0;
+    static enum key_state old_key_state = KEY_STATE_A;
+    static enum key_state next_state = KEY_STATE_A;
+    static uint8_t wait_next_state = 10;
     uint8_t new_key[2] = {0};
     uint8_t press_num;
     key_scan(new_key, 2, &press_num);
-    // as i test in the windows,
-    // if there was one key press with the shift key at the same time,
-    // those two must release at once
-    // if there was one key press with any other key (no shift key)
-    // the windows will release one key first and press another key immediately
-    // so, no matter how many key is press, all key will release
-    // press key number less than old, meaning one key release
-    if (press_num < old_press_num) {
-        if (old_press_num == 1) {
-            old_press_num = 0;
-            old_key[0] = 0;
-            old_key[1] = 0;
-            two_key_release_one = 0;
-            return ;
-        } else if (old_press_num == 2) {
-            old_press_num = 1;
-            old_key[0] = new_key[0];
-            old_key[1] = new_key[1];
-            two_key_release_one = 1;
+    if (press_num < old_press_num) { // key release
+        if (next_state == KEY_STATE_B) {
+            if (wait_next_state != 0) {
+                *key_count = 1;
+                *key = KEY_SHIFT;
+                wait_next_state --;
+            } else {
+                *key_count = 0;
+                *key = 0;
+                wait_next_state = 10;
+                old_key_state = KEY_STATE_A;
+            }
+        } else {
+            *key_count = 0;
+            *key = 0;
         }
-        *key_count = 0;
-        *key = 0;
         return;
-    } else if (press_num == old_press_num) {
+    } else if (press_num == old_press_num) { // key unchange
         *key_count = press_num;
         switch(press_num) {
             case 0:
                 *key = 0;
                 return;
             case 1:
-                // when it's the two key press and release one key ,
-                // should ignore another key press
-                if (two_key_release_one) {
+                old_key_state = KEY_STATE_A;
+                if (new_key[0] == KEY_SHIFT) {
+                    next_state = KEY_STATE_B;
                     *key = 0;
                 } else {
-                    *key = old_key[0];
+                    next_state = KEY_STATE_C;
+                    *key = new_key[0];
                 }
                 return;
             case 2:
                 // return press two key mean shift key and return key press
-                if (old_key[0] == KEY_SHIFT) {
-                    *key = old_key[1];
-                } else if (old_key[1] == KEY_SHIFT) {
-                    *key = old_key[0];
-                    *key_count = 1;
-                } else {
-                    *key = old_key[1];
-                    *key_count = 1;
-                }
+                switch (old_key_state)
+                {
+                    case KEY_STATE_E:
+                    case KEY_STATE_F:
+                        break;
+                    case KEY_STATE_G:
+                        break;
+                    default:
+                        break;
+                };
                 return;
             default:
+                *key_count = 0;
                 *key = 0;
                 return;
         }
-    } else {
+    } else { // press one more key
         old_press_num = press_num;
         *key_count = press_num;
         // from zero to one
         // press one key
-        // the shift key only press when it is release
         if (press_num == 1) {
             old_key[0] = new_key[0];
             old_key[1] = new_key[1];
             if (new_key[0] == KEY_SHIFT) {
+                next_state = KEY_STATE_B;
                 *key = 0;
             } else {
-                *key = new_key[0];
+                next_state = KEY_STATE_C;
+               *key = new_key[0];
             }
-        } else { // from one to two
-            // new key pos 0 is pre key
+        } else {
             if (old_key[0] == new_key[0]) {
                 old_key[0] = new_key[0];
                 old_key[1] = new_key[1];
-                if (old_key[0] == KEY_SHIFT) {
-                    *key = new_key[1];
-                } else if (old_key[1] == KEY_SHIFT) {
-                    *key = new_key[0];
-                } else {
-                    // two no shift key press ,one key up
-                    *key = 0;
-                    *key_count = 1;
-                }
             } else {
-                old_key[0] = new_key[1];
                 old_key[1] = new_key[0];
-                if (old_key[0] == KEY_SHIFT) {
-                    *key = new_key[1];
-                } else if (old_key[1] == KEY_SHIFT) {
-                    *key = new_key[0];
-                } else {
+                old_key[0] = new_key[1];
+            }
+            if (old_key[0] == KEY_SHIFT) {
+                // return press two key mean shift key and return key press
+                old_key_state = KEY_STATE_B;
+                next_state = KEY_STATE_E;
+                *key = old_key[1];
+                *key_count = 2;
+            } else if (old_key[1] == KEY_SHIFT) {
+                old_key_state = KEY_STATE_C;
+                next_state = KEY_STATE_F;
+                *key = old_key[0];
+                *key_count = 1;
+            } else {
+                old_key_state = KEY_STATE_C;
+                next_state = KEY_STATE_G;
+                if (wait_next_state != 0) {
+                    *key_count = 0;
                     *key = 0;
+                    wait_next_state --;
+                } else {
                     *key_count = 1;
+                    *key = old_key[1];
+                    wait_next_state = 10;
+                    old_key_state = KEY_STATE_G;
                 }
             }
         }
