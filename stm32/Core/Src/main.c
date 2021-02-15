@@ -74,8 +74,17 @@ enum key_state {
     KEY_STATE_E,
     KEY_STATE_F,
     KEY_STATE_G,
-    KEY_STATE_H
+    KEY_STATE_H,
+    KEY_STATE_I,
 };
+enum key_action {
+    NS_KEY_RELEASE,
+    NS_KEY_PRESS,
+    S_KEY_RELEASE,
+    S_KEY_PRESS,
+    KEY_UNCHANGE,
+};
+
 // NS = non-shift
 // |                                                 | shift-key press | shift-key release | NS-key press | NS-key release |  no action   |
 // |       A no key press, return key_none           |       B         | ----------------- |      C       | -------------- | ------------ |
@@ -90,113 +99,57 @@ void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
     static uint8_t old_press_num = 0;
-    static enum key_state old_key_state = KEY_STATE_A;
-    static enum key_state next_state = KEY_STATE_A;
+    static enum key_state cur_state = KEY_STATE_A;
     static uint8_t wait_next_state = 10;
     uint8_t new_key[2] = {0};
-    uint8_t press_num;
+    uint8_t press_num = 0;
+    enum key_action cur_action = KEY_UNCHANGE;
     key_scan(new_key, 2, &press_num);
     if (press_num < old_press_num) { // key release
-        if (next_state == KEY_STATE_B) {
-            if (wait_next_state != 0) {
-                *key_count = 1;
-                *key = KEY_SHIFT;
-                wait_next_state --;
+        if (old_key[0] == KEY_SHIFT) {
+            if (old_key[1] == new_key[0]) {
+                cur_action = NS_KEY_RELEASE;
             } else {
-                *key_count = 0;
-                *key = 0;
-                wait_next_state = 10;
-                old_key_state = KEY_STATE_A;
+                cur_action = S_KEY_RELEASE;
             }
-        } else {
-            *key_count = 0;
-            *key = 0;
+        } else if (old_key[1] == KEY_SHIFT) {
+            if (new_key[0] == old_key[0]) {
+                cur_action = S_KEY_RELEASE;
+            } else {
+                cur_action = NS_KEY_RELEASE;
+            }
         }
-        return;
     } else if (press_num == old_press_num) { // key unchange
-        *key_count = press_num;
-        switch(press_num) {
-            case 0:
-                *key = 0;
-                return;
-            case 1:
-                old_key_state = KEY_STATE_A;
-                if (new_key[0] == KEY_SHIFT) {
-                    next_state = KEY_STATE_B;
-                    *key = 0;
-                } else {
-                    next_state = KEY_STATE_C;
-                    *key = new_key[0];
-                }
-                return;
-            case 2:
-                // return press two key mean shift key and return key press
-                switch (old_key_state)
-                {
-                    case KEY_STATE_E:
-                    case KEY_STATE_F:
-                        break;
-                    case KEY_STATE_G:
-                        break;
-                    default:
-                        break;
-                };
-                return;
-            default:
-                *key_count = 0;
-                *key = 0;
-                return;
-        }
+        cur_action = KEY_UNCHANGE;
     } else { // press one more key
-        old_press_num = press_num;
-        *key_count = press_num;
-        // from zero to one
-        // press one key
-        if (press_num == 1) {
-            old_key[0] = new_key[0];
-            old_key[1] = new_key[1];
-            if (new_key[0] == KEY_SHIFT) {
-                next_state = KEY_STATE_B;
-                *key = 0;
+        if (old_key[0] == new_key[0]) {
+            if (new_key[1] == KEY_SHIFT) {
+                cur_action = S_KEY_PRESS;
             } else {
-                next_state = KEY_STATE_C;
-               *key = new_key[0];
+                cur_action = NS_KEY_PRESS;
             }
         } else {
-            if (old_key[0] == new_key[0]) {
-                old_key[0] = new_key[0];
-                old_key[1] = new_key[1];
+            if (new_key[0] == KEY_SHIFT) {
+                cur_action = S_KEY_PRESS;
             } else {
-                old_key[1] = new_key[0];
-                old_key[0] = new_key[1];
-            }
-            if (old_key[0] == KEY_SHIFT) {
-                // return press two key mean shift key and return key press
-                old_key_state = KEY_STATE_B;
-                next_state = KEY_STATE_E;
-                *key = old_key[1];
-                *key_count = 2;
-            } else if (old_key[1] == KEY_SHIFT) {
-                old_key_state = KEY_STATE_C;
-                next_state = KEY_STATE_F;
-                *key = old_key[0];
-                *key_count = 1;
-            } else {
-                old_key_state = KEY_STATE_C;
-                next_state = KEY_STATE_G;
-                if (wait_next_state != 0) {
-                    *key_count = 0;
-                    *key = 0;
-                    wait_next_state --;
-                } else {
-                    *key_count = 1;
-                    *key = old_key[1];
-                    wait_next_state = 10;
-                    old_key_state = KEY_STATE_G;
-                }
+                cur_action = NS_KEY_PRESS;
             }
         }
     }
+    struct {
+        enum key_state cur_state;
+        enum key_action cur_action;
+        enum key_state next_state;
+    } trans_tables[] = {
+        KEY_STATE_A, KEY_UNCHANGE,  KEY_STATE_A,
+        KEY_STATE_A, S_KEY_PRESS,   KEY_STATE_B,
+        KEY_STATE_A, NS_KEY_PRESS,  KEY_STATE_C,
+        KEY_STATE_B, S_KEY_RELEASE, KEY_STATE_D, 
+        KEY_STATE_B, NS_KEY_PRESS,  KEY_STATE_E,
+        KEY_STATE_C, S_KEY_PRESS,   KEY_STATE_F,
+        KEY_STATE_C, NS_KEY_PRESS,  KEY_STATE_G,
+        KEY_STATE_C, 
+    };
 }
 
 /**
