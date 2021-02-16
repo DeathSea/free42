@@ -78,11 +78,14 @@ enum key_state {
     KEY_STATE_I,
 };
 enum key_action {
-    NS_KEY_RELEASE,
+    FIRST_KEY_RELEASE = 1,
+    SECOND_KEY_RELEASE = 2,
+    NS_KEY_RELEASE = 3,
     NS_KEY_PRESS,
     S_KEY_RELEASE,
     S_KEY_PRESS,
     KEY_UNCHANGE,
+    NO_KEY_ACTION,
 };
 
 // NS = non-shift
@@ -93,8 +96,8 @@ enum key_action {
 // |     D shift key release, return shift key       | --------------- | ----------------- | ------------ | -------------- |       A      |
 // |    E shift + key press, return the key press    | --------------- |         H         | ------------ |       B        | ------------ |
 // |    F key + shift press, return the key press    | --------------- |         H         | ------------ |       B        | ------------ |
-// |    G NS key 1 + NS key 2, return key_none       | --------------- | ----------------- | ------------ |       H        | return key 2 |
-// |    H release one of two key, return none        |       H         | ----------------- |      G       |       A        | ------------ |
+// |    G NS key 1 + NS key 2, return key_none       | --------------- | ----------------- | ------------ |      C/H       | return key 2 |
+// |    H release the second key, return none        |       B         | ----------------- |      G       |       A        | ------------ |
 void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
@@ -118,11 +121,17 @@ void key_get(uint8_t* key, uint8_t* key_count)
             } else {
                 cur_action = NS_KEY_RELEASE;
             }
+        } else if (old_key[0] == new_key[0]) {
+            cur_action = SECOND_KEY_RELEASE;
+        } else if (old_key[1] == new_key[0] && new_key[0] != 0) {
+            cur_action = FIRST_KEY_RELEASE;
+        } else {
+            cur_action = NS_KEY_RELEASE;
         }
     } else if (press_num == old_press_num) { // key unchange
         cur_action = KEY_UNCHANGE;
     } else { // press one more key
-        if (old_key[0] == new_key[0]) {
+        if ((old_key[0] == new_key[0]) && (press_num == 2)) {
             if (new_key[1] == KEY_SHIFT) {
                 cur_action = S_KEY_PRESS;
             } else {
@@ -134,22 +143,216 @@ void key_get(uint8_t* key, uint8_t* key_count)
             } else {
                 cur_action = NS_KEY_PRESS;
             }
+            if (press_num == 2) {
+                uint8_t tmp_key = new_key[1];
+                new_key[1] = new_key[0];
+                new_key[0] = tmp_key;
+            }
         }
     }
-    struct {
-        enum key_state cur_state;
-        enum key_action cur_action;
-        enum key_state next_state;
-    } trans_tables[] = {
-        KEY_STATE_A, KEY_UNCHANGE,  KEY_STATE_A,
-        KEY_STATE_A, S_KEY_PRESS,   KEY_STATE_B,
-        KEY_STATE_A, NS_KEY_PRESS,  KEY_STATE_C,
-        KEY_STATE_B, S_KEY_RELEASE, KEY_STATE_D, 
-        KEY_STATE_B, NS_KEY_PRESS,  KEY_STATE_E,
-        KEY_STATE_C, S_KEY_PRESS,   KEY_STATE_F,
-        KEY_STATE_C, NS_KEY_PRESS,  KEY_STATE_G,
-        KEY_STATE_C, 
-    };
+
+    switch (cur_state)
+    {
+        case KEY_STATE_A: // no key press
+            switch (cur_action)
+            {
+                case S_KEY_PRESS:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_B;
+                    break;
+                case NS_KEY_PRESS:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_C;
+                    break;
+                default:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_A;
+                    break;
+            }
+            break;
+        case KEY_STATE_B: // shift key press
+            switch (cur_action)
+            {
+                case S_KEY_RELEASE:
+                    *key = KEY_SHIFT;
+                    *key_count = 1;
+                    cur_state = KEY_STATE_D;
+                    break;
+                case NS_KEY_PRESS:
+                    *key = new_key[1];
+                    *key_count = 2;
+                    cur_state = KEY_STATE_E;
+                default:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_A;
+                    break;
+            }
+            break;
+        case KEY_STATE_C: // non-shift key press
+            switch (cur_action)
+            {
+                case S_KEY_PRESS:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_F;
+                    break;
+                case NS_KEY_PRESS:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_G;
+                    break;
+                case NS_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_A;
+                    break;
+                default:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_C;
+                    break;
+            }
+            break;
+        case KEY_STATE_D: // shift key release
+            if (wait_next_state != 0) {
+                *key = KEY_SHIFT;
+                *key_count = 1;
+                cur_state = KEY_STATE_D;
+                wait_next_state --;
+            } else {
+                *key = 0;
+                *key_count = 0;
+                cur_state = KEY_STATE_A;
+                wait_next_state = 10;
+            }
+            break;
+        case KEY_STATE_E: // shift + key press
+            switch (cur_action)
+            {
+                case S_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_I;
+                    break;
+                case NS_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_I;
+                    break;
+                default:
+                    *key = new_key[1];
+                    *key_count = 2;
+                    cur_state = KEY_STATE_E;
+                    break;
+            }
+            break;
+        case KEY_STATE_F: // key + shift press
+            switch (cur_action)
+            {
+                case S_KEY_RELEASE:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_C;
+                    break;
+                case NS_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_B;
+                    break;
+                default:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_F;
+                    break;
+            }
+            break;
+        case KEY_STATE_G: // key + key press
+            switch (cur_action)
+            {
+                case FIRST_KEY_RELEASE:
+                    *key = new_key[0];
+                    *key_count = 1;
+                    cur_state = KEY_STATE_C;
+                    wait_next_state = 10;
+                    break;
+                case SECOND_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_H;
+                    wait_next_state = 10;
+                    break;
+                default:
+                    if (wait_next_state != 0) {
+                        *key = 0;
+                        *key_count = 0;
+                        wait_next_state --;
+                    } else {
+                        *key = new_key[1];
+                        *key_count = 1;
+                    }
+                    cur_state = KEY_STATE_G;
+                    break;
+            }
+            break;
+        case KEY_STATE_H: // key + key press, second key release
+            *key = 0;
+            *key_count = 0;
+            switch (cur_action)
+            {
+                case S_KEY_PRESS:
+                    cur_state = KEY_STATE_B;
+                    break;
+                case NS_KEY_PRESS:
+                    cur_state = KEY_STATE_G;
+                    break;
+                case NS_KEY_RELEASE:
+                    cur_state = KEY_STATE_A;
+                    break;
+                default:
+                    cur_state = KEY_STATE_H;
+                    break;
+            }
+            break;
+        case KEY_STATE_I: // shift + key press. one key release
+            switch (cur_action)
+            {
+                case S_KEY_PRESS:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_I;
+                    break;
+                case S_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_A;
+                    break;
+                case NS_KEY_PRESS:
+                    *key = new_key[1];
+                    *key_count = 2;
+                    cur_state = KEY_STATE_E;
+                    break;
+                case NS_KEY_RELEASE:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_A;
+                    break;
+                default:
+                    *key = 0;
+                    *key_count = 0;
+                    cur_state = KEY_STATE_I;
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    old_key[0] = new_key[0];
+    old_key[1] = new_key[1];
+    old_press_num = press_num;
 }
 
 /**
@@ -215,6 +418,8 @@ int main(void)
                         start_timer1();
                     }
                 }
+            } else {
+                core_keyup();
             }
             last_keynum = key;
         }
