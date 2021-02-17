@@ -15,6 +15,15 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
 
+int _write (int fd, char *pBuffer, int size)  
+{  
+    for (int i = 0; i < size; i++)  
+    {
+        ITM_SendChar(pBuffer[i]);
+    }  
+    return size;  
+}
+
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
@@ -67,15 +76,15 @@ void check_timeout()
 /* USER CODE END 0 */
 
 enum key_state {
-    KEY_STATE_A, 
-    KEY_STATE_B, 
-    KEY_STATE_C,
-    KEY_STATE_D,
-    KEY_STATE_E,
-    KEY_STATE_F,
-    KEY_STATE_G,
-    KEY_STATE_H,
-    KEY_STATE_I,
+    KEY_STATE_A = 0, // no key press
+    KEY_STATE_B = 1, // shift key press
+    KEY_STATE_C = 2, // non-shift key press
+    KEY_STATE_D = 3, // shift key release
+    KEY_STATE_E = 4, // shift + key press
+    KEY_STATE_F = 5, // key + shift press
+    KEY_STATE_G = 6, // key + key press
+    KEY_STATE_H = 7, // key + key press, second key release
+    KEY_STATE_I = 8, // shift + key press. one key release
 };
 enum key_action {
     FIRST_KEY_RELEASE = 1,
@@ -111,9 +120,9 @@ void key_get(uint8_t* key, uint8_t* key_count)
     if (press_num < old_press_num) { // key release
         if (old_key[0] == KEY_SHIFT) {
             if (old_key[1] == new_key[0]) {
-                cur_action = NS_KEY_RELEASE;
-            } else {
                 cur_action = S_KEY_RELEASE;
+            } else {
+                cur_action = NS_KEY_RELEASE;
             }
         } else if (old_key[1] == KEY_SHIFT) {
             if (new_key[0] == old_key[0]) {
@@ -128,8 +137,16 @@ void key_get(uint8_t* key, uint8_t* key_count)
         } else {
             cur_action = NS_KEY_RELEASE;
         }
+        printf("release key cur_state : %d, cur_action:%d, key1: %d, key2 :%d\n", cur_state, cur_action, new_key[0], new_key[1]);
     } else if (press_num == old_press_num) { // key unchange
         cur_action = KEY_UNCHANGE;
+        if (press_num == 2) {
+            if (new_key[1] == old_key[0]) {
+                uint8_t tmp_key = new_key[1];
+                new_key[1] = new_key[0];
+                new_key[0] = tmp_key;
+            }
+        }
     } else { // press one more key
         if ((old_key[0] == new_key[0]) && (press_num == 2)) {
             if (new_key[1] == KEY_SHIFT) {
@@ -149,8 +166,8 @@ void key_get(uint8_t* key, uint8_t* key_count)
                 new_key[0] = tmp_key;
             }
         }
+        printf("press key cur_state : %d, cur_action:%d, key1: %d, key2 :%d\n", cur_state, cur_action, new_key[0], new_key[1]);
     }
-
     switch (cur_state)
     {
         case KEY_STATE_A: // no key press
@@ -185,10 +202,11 @@ void key_get(uint8_t* key, uint8_t* key_count)
                     *key = new_key[1];
                     *key_count = 2;
                     cur_state = KEY_STATE_E;
+                    break;
                 default:
                     *key = 0;
                     *key_count = 0;
-                    cur_state = KEY_STATE_A;
+                    cur_state = KEY_STATE_B;
                     break;
             }
             break;
@@ -392,6 +410,7 @@ int main(void)
         // TODO: the key when press two key is behave difference in win free 42 need adjust
         int keyrunning = 1;
         if (key != last_keynum) {
+            printf("key == %d\n", key);
             if (key != 0) {
                 end_timer();
                 // key press
