@@ -107,6 +107,7 @@ enum key_action {
 // |    F key + shift press, return the key press    | --------------- |         H         | ------------ |       B        | ------------ |
 // |    G NS key 1 + NS key 2, return key_none       | --------------- | ----------------- | ------------ |      C/H       | return key 2 |
 // |    H release the second key, return none        |       B         | ----------------- |      G       |       A        | ------------ |
+// |    I shift+key one key release return none      |       I         |         A         |      E       |       A        | ------------ |
 void key_get(uint8_t* key, uint8_t* key_count)
 {
     static uint8_t old_key[2] = {0};
@@ -137,7 +138,6 @@ void key_get(uint8_t* key, uint8_t* key_count)
         } else {
             cur_action = NS_KEY_RELEASE;
         }
-        printf("release key cur_state : %d, cur_action:%d, key1: %d, key2 :%d\n", cur_state, cur_action, new_key[0], new_key[1]);
     } else if (press_num == old_press_num) { // key unchange
         cur_action = KEY_UNCHANGE;
         if (press_num == 2) {
@@ -166,7 +166,6 @@ void key_get(uint8_t* key, uint8_t* key_count)
                 new_key[0] = tmp_key;
             }
         }
-        printf("press key cur_state : %d, cur_action:%d, key1: %d, key2 :%d\n", cur_state, cur_action, new_key[0], new_key[1]);
     }
     switch (cur_state)
     {
@@ -406,11 +405,8 @@ int main(void)
     {
         check_timeout();
         key_get(&key, &key_count);
-        // TODO: TWO key press need adjust hardward setting 
-        // TODO: the key when press two key is behave difference in win free 42 need adjust
         int keyrunning = 1;
         if (key != last_keynum) {
-            printf("key == %d\n", key);
             if (key != 0) {
                 end_timer();
                 // key press
