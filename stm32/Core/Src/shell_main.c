@@ -1,5 +1,5 @@
 #include "shell.h"
-#include "stm32l4xx_hal.h"
+#include "stm32_handle.h"
 #include "screen.h"
 
 const char *shell_platform()
@@ -74,16 +74,14 @@ void shell_print(const char *text, int length,
 	
 void shell_get_time_date(uint4 *time, uint4 *date, int *weekday)
 {
-	date[0] = 2020;
-	date[1] = 12;
-	date[2] = 6;
-	
-	time[0] = 6;
-	time[1] = 8;
-	time[2] = 55;
-	time[3] = 999;
+    RTC_DateTypeDef rtcDataType = {0};
+    RTC_TimeTypeDef rtcTimeType = {0};
+	HAL_RTC_GetTime(&hrtc, &rtcTimeType, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &rtcDataType, RTC_FORMAT_BIN);
 
-	weekday[0] = 0;
+	*date = ((rtcDataType.Year + 2000) * 100 + rtcDataType.Month) * 100 + rtcDataType.Date;
+	*time = rtcTimeType.Hours * 1000000 + rtcTimeType.Minutes * 10000 + rtcTimeType.Seconds * 100 + rtcTimeType.SubSeconds / 10;
+	*weekday = ((rtcDataType.WeekDay == 7) ? 0 : rtcDataType.WeekDay);
 }
 
 void shell_message(const char *message)
